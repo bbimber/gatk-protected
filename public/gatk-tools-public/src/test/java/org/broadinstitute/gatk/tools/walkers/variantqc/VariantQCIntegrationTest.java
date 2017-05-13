@@ -63,19 +63,18 @@ import java.util.List;
 public class VariantQCIntegrationTest extends WalkerTest {
     private static String variantEvalTestDataRoot = privateTestDir + "/";
 
+    private static String cmdRoot = "-T VariantQC" +
+            " -R " + b36KGReference;
+
     @Test
     public void testBasicOperation() {
-        String testDir = "/Users/bimber/Desktop/TestData/";
-
         WalkerTestSpec spec = new WalkerTestSpec(
                                 buildCommandLine(
                                         "-T VariantQC",
-                                        "-R " + testDir + "18_MacaM.fasta",
-                                        "-V " + testDir + "GBS_PstI.vcf.gz",
-                                        "-L chr01",
-                                        //"-L " + testDir + "GBS_PstI.vcf.gz",
-                                        "-o /Users/bimber/Desktop/text.html"
-                                        //"-o %s"
+                                        "-R " + b37KGReference,
+                                        "-V " + validationDataLocation + "snpEff2.0.5.AFR.unfiltered.VariantAnnotator.output.vcf",
+                                        "-L " + validationDataLocation + "snpEff2.0.5.AFR.unfiltered.VariantAnnotator.output.vcf",
+                                        "-o %s"
                                 ),
                                 1,
                                 Arrays.asList("7091cbeb47d041463806c8c8f98239a6")
