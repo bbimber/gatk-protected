@@ -10,6 +10,7 @@ import org.broadinstitute.gatk.utils.commandline.ArgumentCollection;
 import org.broadinstitute.gatk.utils.commandline.Output;
 import org.broadinstitute.gatk.utils.contexts.AlignmentContext;
 import org.broadinstitute.gatk.utils.contexts.ReferenceContext;
+import org.broadinstitute.gatk.utils.exceptions.GATKException;
 import org.broadinstitute.gatk.utils.refdata.RefMetaDataTracker;
 import org.broadinstitute.gatk.utils.report.GATKReportTable;
 import org.broadinstitute.gatk.utils.report.GATKReportVersion;
@@ -63,7 +64,7 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         }
         catch (NoSuchFieldException e)
         {
-            throw new RuntimeException(e);
+            throw new GATKException(e.getMessage(), e);
         }
 
         //initialize
@@ -118,15 +119,13 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         List<JsonTranslator> translators = new ArrayList<>();
         translators.add(new JsonTranslator(sampleTable, "Plot1", JsonTranslator.PlotType.bar_graph));
 
-        JsonArray sections = new JsonArray();
-        for (JsonTranslator t : translators){
-            sections.add(t.getConfig());
+
+        try {
+            HtmlGenerator generator = new HtmlGenerator();
+            generator.generateHtml(translators, out);
         }
-
-        JsonObject config = new JsonObject();
-        config.add("sections", sections);
-
-        //this will get added to our HTML
-        String c = config.toString();
+        catch (IOException e){
+            throw new GATKException(e.getMessage(), e);
+        }
     }
 }
