@@ -1,7 +1,5 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
 import org.broadinstitute.gatk.engine.arguments.StandardVariantContextInputArgumentCollection;
 import org.broadinstitute.gatk.engine.walkers.*;
 import org.broadinstitute.gatk.tools.walkers.varianteval.VariantEval;
@@ -58,6 +56,21 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
             JVMUtils.setFieldValue(evalField, sampleStratifiedWalker, Arrays.asList(variantCollection.variants));
             JVMUtils.setFieldValue(evalField, locusStratifiedWalker, Arrays.asList(variantCollection.variants));
 
+            //TODO: Stratification / VariantEvaluator combinations we likely need:
+
+            //Entire genome (EvalRod):
+            //CountVariants, IndelSummary, TiTvVariantEvaluator, GenotypeFilterSummary, MendelianViolationEvaluator
+            //SiteFilterSummary? VariantSummary?
+
+            //Locus: probably identical to EvalRod
+
+            //Sample:
+            //CountVariants, IndelSummary, TiTvVariantEvaluator, GenotypeFilterSummary, MendelianViolationEvaluator
+            //NOTE: VariantSummary is incompatible w/ Sample.
+
+
+            //NOTE: we might need to implement the per-filter type binning as a stratification, which is non-ideal
+
             Field outField = VariantEval.class.getField("out");
             JVMUtils.setFieldValue(evalField, outField, new PrintWriter(bao1));
             JVMUtils.setFieldValue(evalField, outField, new PrintWriter(bao2));
@@ -90,16 +103,16 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
     @Override
     public Integer reduceInit() {
-        sampleStratifiedWalker.reduceInit();
-        locusStratifiedWalker.reduceInit();
+        //sampleStratifiedWalker.reduceInit();
+        //locusStratifiedWalker.reduceInit();
 
         return null;
     }
 
     @Override
     public Integer reduce(Integer value, Integer sum) {
-        sampleStratifiedWalker.reduce(value, sum);
-        locusStratifiedWalker.reduce(value, sum);
+        //sampleStratifiedWalker.reduce(value, sum);
+        //locusStratifiedWalker.reduce(value, sum);
 
         return null;
     }
@@ -111,13 +124,22 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         sampleStratifiedWalker.onTraversalDone(result);
         locusStratifiedWalker.onTraversalDone(result);
 
-        //do our actual work here
-        GATKReportTable sampleTable = new GATKReportTable(new BufferedReader(new StringReader(new String(bao1.toByteArray()))), GATKReportVersion.V1_1);
-        GATKReportTable locusTable = new GATKReportTable(new BufferedReader(new StringReader(new String(bao2.toByteArray()))), GATKReportVersion.V1_1);
-
         //make classes like this to translate from the GATKReportTable into the config object we need in our HTML
         List<JsonTranslator> translators = new ArrayList<>();
-        translators.add(new JsonTranslator(sampleTable, "Plot1", JsonTranslator.PlotType.bar_graph));
+
+        try (BufferedReader sampleReader = new BufferedReader(new StringReader(new String(bao1.toByteArray())))) {
+            //this output will likely contain multiple reports, and we can add them like this.
+            //the reader will only scan to the end of its table, and then leave the reader on the beginning of the next table
+            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot1", JsonTranslator.PlotType.bar_graph));
+            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot2", JsonTranslator.PlotType.data_table));
+        }
+        catch (IOException e) {
+            throw new GATKException(e.getMessage(), e);
+        }
+
+        //follow a similar pattern for each VariantEval walker
+        GATKReportTable locusTable = new GATKReportTable(new BufferedReader(new StringReader(new String(bao2.toByteArray()))), GATKReportVersion.V1_1);
+
 
 
         try {
