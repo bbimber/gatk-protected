@@ -138,8 +138,8 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
             //this output will likely contain multiple reports, and we can add them like this.
             //the reader will only scan to the end of its table, and then leave the reader on the beginning of the next table
-            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot1", JsonTranslator.PlotType.data_table));
-            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot2", JsonTranslator.PlotType.data_table));
+            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot1", JsonTranslator.PlotType.data_table, "VariantSummary", Arrays.asList("Sample")));
+            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot2", JsonTranslator.PlotType.data_table, "IndelSummary", Arrays.asList("Sample")));
         }
         catch (IOException e) {
             throw new GATKException(e.getMessage(), e);
