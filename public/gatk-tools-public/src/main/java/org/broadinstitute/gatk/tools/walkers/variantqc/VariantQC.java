@@ -134,9 +134,11 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         List<JsonTranslator> translators = new ArrayList<>();
 
         try (BufferedReader sampleReader = new BufferedReader(new StringReader(new String(bao1.toByteArray())))) {
+            sampleReader.readLine(); //read first GATKReport line
+
             //this output will likely contain multiple reports, and we can add them like this.
             //the reader will only scan to the end of its table, and then leave the reader on the beginning of the next table
-            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot1", JsonTranslator.PlotType.bar_graph));
+            translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot1", JsonTranslator.PlotType.data_table));
             translators.add(new JsonTranslator(new GATKReportTable(sampleReader, GATKReportVersion.V1_1), "Plot2", JsonTranslator.PlotType.data_table));
         }
         catch (IOException e) {
