@@ -66,10 +66,16 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
             //Sample:
             //CountVariants, IndelSummary, TiTvVariantEvaluator, GenotypeFilterSummary, MendelianViolationEvaluator
+            //SiteFilterSummary?
             //NOTE: VariantSummary is incompatible w/ Sample.
 
-
+            //FilterType:
             //NOTE: we might need to implement the per-filter type binning as a stratification, which is non-ideal
+            //This is only needed if we cant get SiteFilterSummary working
+            //CountVariants, IndelSummary, GenotypeFilterSummary
+
+            //Sample + FilterType:
+            //Same as FilterType
 
             Field outField = VariantEval.class.getField("out");
             JVMUtils.setFieldValue(evalField, outField, new PrintWriter(bao1));
