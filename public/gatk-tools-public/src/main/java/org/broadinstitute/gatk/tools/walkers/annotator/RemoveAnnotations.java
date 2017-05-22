@@ -1,4 +1,4 @@
-package org.broadinstitute.gatk.tools.walkers;
+package org.broadinstitute.gatk.tools.walkers.annotator;
 
 import htsjdk.variant.variantcontext.*;
 import htsjdk.variant.variantcontext.writer.VariantContextWriter;
@@ -6,6 +6,8 @@ import htsjdk.variant.vcf.*;
 import org.broadinstitute.gatk.engine.GATKVCFUtils;
 import org.broadinstitute.gatk.engine.SampleUtils;
 import org.broadinstitute.gatk.engine.arguments.StandardVariantContextInputArgumentCollection;
+import org.broadinstitute.gatk.engine.walkers.By;
+import org.broadinstitute.gatk.engine.walkers.DataSource;
 import org.broadinstitute.gatk.engine.walkers.RodWalker;
 import org.broadinstitute.gatk.engine.walkers.TreeReducible;
 import org.broadinstitute.gatk.utils.commandline.Argument;
@@ -21,6 +23,7 @@ import java.util.*;
 /**
  * Created by bimber on 5/4/2017.
  */
+@By(DataSource.REFERENCE)
 public class RemoveAnnotations extends RodWalker<Integer, Integer> implements TreeReducible<Integer> {
     @ArgumentCollection
     protected StandardVariantContextInputArgumentCollection variantCollection = new StandardVariantContextInputArgumentCollection();

@@ -67,10 +67,7 @@ public class HtmlGenerator {
         }
 
         for (String script : JS_SCRIPTS){
-            Resource r = new Resource(script, VariantQC.class);
-            out.println("<script type=\"text/javascript\">");
-            IOUtils.copy(r.getResourceContentsAsStream(), out);
-            out.println("</script>");
+            appendScript(script, out);
         }
 
         //config:
@@ -91,14 +88,18 @@ public class HtmlGenerator {
         out.println("</script>");
 
         for (String script : JS_SCRIPTS2){
-            Resource r = new Resource(script, VariantQC.class);
-            out.println("<script type=\"text/javascript\">");
-            IOUtils.copy(r.getResourceContentsAsStream(), out);
-            out.println("</script>");
+            appendScript(script, out);
         }
 
         //append header
         Resource header2 = new Resource("templates/template2.html", VariantQC.class);
         IOUtils.copy(header2.getResourceContentsAsStream(), out);
+    }
+
+    private void appendScript(String script, PrintStream out) throws IOException{
+        Resource r = new Resource(script, VariantQC.class);
+        out.println("<script type=\"text/javascript\">");
+        IOUtils.copy(r.getResourceContentsAsStream(), out);
+        out.println("</script>");
     }
 }

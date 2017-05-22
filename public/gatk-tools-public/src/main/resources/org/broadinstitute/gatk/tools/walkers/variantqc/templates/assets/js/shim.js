@@ -2,6 +2,7 @@ function processPlots(config){
     var toAppend = [];
     var navConfig = {};
     var plotData = {};
+    var sectionMap = {};
     $.each(config.sections, function(idx, section){
         section.id = uniqID.get(section.label.toLowerCase());
         section.id = section.id.replace(/ /g, '_');
@@ -10,8 +11,11 @@ function processPlots(config){
         navConfig[section.label] = navConfig[section.label] || {label: section.label, id: section.id, children: []};
 
         //create div for section
-        var sectionDiv = buildSectionDiv(section);
-        toAppend.push(sectionDiv);
+        if (!sectionMap[section.label]){
+            var sectionDiv = buildSectionDiv(section);
+            toAppend.push(sectionDiv);
+            sectionMap[section.label] = section;
+        }
 
         $.each(section.reports, function(idx, r){
             r.id = uniqID.get(r.label.toLowerCase());
