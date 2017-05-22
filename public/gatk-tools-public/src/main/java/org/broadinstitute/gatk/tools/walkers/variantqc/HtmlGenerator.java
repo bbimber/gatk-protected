@@ -15,35 +15,37 @@ import java.util.List;
  */
 public class HtmlGenerator {
     public static final String[] JS_SCRIPTS = new String[]{
-            "assets/js/packages/jquery-3.1.1.min.js",
-            "assets/js/packages/jquery-ui.min.js",
-            "https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js",
-            "assets/js/packages/bootstrap.min.js",
-            "assets/js/packages/highcharts.js",
-            "assets/js/packages/highcharts.exporting.js",
-            "assets/js/packages/highcharts.heatmap.js",
-            "assets/js/packages/highcharts.offline-exporting.js",
-            "assets/js/packages/jquery.tablesorter.min.js",
-            "assets/js/packages/clipboard.min.js",
-            "assets/js/packages/FileSaver.min.js",
-            "https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.3/chroma.min.js",
-            "assets/js/packages/lz-string.min.js",
-            "assets/js/summaryTable.js",
-            "assets/js/shim.js"
+            "templates/assets/js/packages/jquery-3.1.1.min.js",
+            "templates/assets/js/packages/jquery-ui.min.js",
+            "templates/assets/js/packages/numeral.min.js",
+            //"https://cdnjs.cloudflare.com/ajax/libs/numeral.js/2.0.6/numeral.min.js",
+            "templates/assets/js/packages/bootstrap.min.js",
+            "templates/assets/js/packages/highcharts.js",
+            "templates/assets/js/packages/highcharts.exporting.js",
+            "templates/assets/js/packages/highcharts.heatmap.js",
+            "templates/assets/js/packages/highcharts.offline-exporting.js",
+            "templates/assets/js/packages/jquery.tablesorter.min.js",
+            "templates/assets/js/packages/clipboard.min.js",
+            "templates/assets/js/packages/FileSaver.min.js",
+            //"https://cdnjs.cloudflare.com/ajax/libs/chroma-js/1.3.3/chroma.min.js",
+            "templates/assets/js/packages/chroma.min.js",
+            "templates/assets/js/packages/lz-string.min.js",
+            "templates/assets/js/summaryTable.js",
+            "templates/assets/js/shim.js"
     };
 
     public static final String[] JS_SCRIPTS2 = new String[]{
-            "assets/js/multiqc.js",
-            "assets/js/multiqc_tables.js",
-            "assets/js/multiqc_toolbox.js",
-            "assets/js/multiqc.js",
-            "assets/js/multiqc_plotting.js"
+            "templates/assets/js/multiqc.js",
+            "templates/assets/js/multiqc_tables.js",
+            "templates/assets/js/multiqc_toolbox.js",
+            "templates/assets/js/multiqc.js",
+            "templates/assets/js/multiqc_plotting.js"
     };
 
     public static final String[] CSS_FILES = new String[]{
-            "assets/css/bootstrap.min.css",
-            "assets/css/default_multiqc.css",
-            "assets/css/font.css"
+            "templates/assets/css/bootstrap.min.css",
+            "templates/assets/css/default_multiqc.css",
+            "templates/assets/css/font.css"
     };
 
     public HtmlGenerator() {
@@ -97,6 +99,6 @@ public class HtmlGenerator {
 
         //append header
         Resource header2 = new Resource("templates/template2.html", VariantQC.class);
-        IOUtils.copy(header.getResourceContentsAsStream(), out);
+        IOUtils.copy(header2.getResourceContentsAsStream(), out);
     }
 }

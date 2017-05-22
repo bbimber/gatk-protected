@@ -1,11 +1,15 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
+import htsjdk.variant.variantcontext.VariantContext;
+import org.broadinstitute.gatk.engine.arguments.DbsnpArgumentCollection;
 import org.broadinstitute.gatk.engine.arguments.StandardVariantContextInputArgumentCollection;
 import org.broadinstitute.gatk.engine.walkers.*;
 import org.broadinstitute.gatk.tools.walkers.varianteval.VariantEval;
 import org.broadinstitute.gatk.utils.classloader.JVMUtils;
 import org.broadinstitute.gatk.utils.commandline.ArgumentCollection;
 import org.broadinstitute.gatk.utils.commandline.Output;
+import org.broadinstitute.gatk.utils.commandline.RodBinding;
+import org.broadinstitute.gatk.utils.commandline.Tags;
 import org.broadinstitute.gatk.utils.contexts.AlignmentContext;
 import org.broadinstitute.gatk.utils.contexts.ReferenceContext;
 import org.broadinstitute.gatk.utils.exceptions.GATKException;
@@ -43,18 +47,44 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
         //configure the child walkers
         sampleStratifiedWalker = new VariantEval();
+        sampleStratifiedWalker.setToolkit(getToolkit());
         locusStratifiedWalker = new VariantEval();
+        locusStratifiedWalker.setToolkit(getToolkit());
 
         //manually set arguments
         try
         {
-            Field stratificationsToUseField = VariantEval.class.getField("STRATIFICATIONS_TO_USE");
-            JVMUtils.setFieldValue(stratificationsToUseField, sampleStratifiedWalker, new String[]{"Sample"});
-            JVMUtils.setFieldValue(stratificationsToUseField, locusStratifiedWalker, new String[]{"Contig"});
-
-            Field evalField = VariantEval.class.getField("eval");
+            Field evalField = VariantEval.class.getDeclaredField("evals");
             JVMUtils.setFieldValue(evalField, sampleStratifiedWalker, Arrays.asList(variantCollection.variants));
             JVMUtils.setFieldValue(evalField, locusStratifiedWalker, Arrays.asList(variantCollection.variants));
+
+            Field outField = VariantEval.class.getDeclaredField("out");
+            JVMUtils.setFieldValue(outField, sampleStratifiedWalker, new PrintStream(bao1));
+            JVMUtils.setFieldValue(outField, locusStratifiedWalker, new PrintStream(bao2));
+
+            Field stratificationsToUseField = VariantEval.class.getDeclaredField("MODULES_TO_USE");
+            JVMUtils.setFieldValue(stratificationsToUseField, sampleStratifiedWalker, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"});
+            JVMUtils.setFieldValue(stratificationsToUseField, locusStratifiedWalker, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"});
+
+            Field noevField = VariantEval.class.getDeclaredField("NO_STANDARD_MODULES");
+            JVMUtils.setFieldValue(noevField, sampleStratifiedWalker, true);
+            JVMUtils.setFieldValue(noevField, locusStratifiedWalker, true);
+
+            Field modulesField = VariantEval.class.getDeclaredField("STRATIFICATIONS_TO_USE");
+            JVMUtils.setFieldValue(modulesField, sampleStratifiedWalker, new String[]{"Sample"});
+            JVMUtils.setFieldValue(modulesField, locusStratifiedWalker, new String[]{"Contig"});
+
+            //TODO: set unbound?
+            Field dbSnpField= VariantEval.class.getDeclaredField("dbsnp");
+            dbSnpField.setAccessible(true);
+
+            DbsnpArgumentCollection dbsnpArgumentCollection1 = (DbsnpArgumentCollection)dbSnpField.get(sampleStratifiedWalker);
+            dbsnpArgumentCollection1.dbsnp = new RodBinding<>(VariantContext.class, "", "UNBOUND", "", new Tags());
+            JVMUtils.setFieldValue(dbSnpField, sampleStratifiedWalker, dbsnpArgumentCollection1);
+
+            DbsnpArgumentCollection dbsnpArgumentCollection2 = (DbsnpArgumentCollection)dbSnpField.get(locusStratifiedWalker);
+            dbsnpArgumentCollection2.dbsnp = new RodBinding<>(VariantContext.class, "", "UNBOUND", "", new Tags());
+            JVMUtils.setFieldValue(dbSnpField, locusStratifiedWalker, dbsnpArgumentCollection2);
 
             //TODO: Stratification / VariantEvaluator combinations we likely need:
 
@@ -76,12 +106,8 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
             //Sample + FilterType:
             //Same as FilterType
-
-            Field outField = VariantEval.class.getField("out");
-            JVMUtils.setFieldValue(evalField, outField, new PrintWriter(bao1));
-            JVMUtils.setFieldValue(evalField, outField, new PrintWriter(bao2));
         }
-        catch (NoSuchFieldException e)
+        catch (Exception e)
         {
             throw new GATKException(e.getMessage(), e);
         }
@@ -144,11 +170,6 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         catch (IOException e) {
             throw new GATKException(e.getMessage(), e);
         }
-
-        //follow a similar pattern for each VariantEval walker
-        GATKReportTable locusTable = new GATKReportTable(new BufferedReader(new StringReader(new String(bao2.toByteArray()))), GATKReportVersion.V1_1);
-
-
 
         try {
             HtmlGenerator generator = new HtmlGenerator();
