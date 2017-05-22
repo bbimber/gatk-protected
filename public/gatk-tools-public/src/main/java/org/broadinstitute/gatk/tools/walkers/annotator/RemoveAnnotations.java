@@ -101,26 +101,20 @@ public class RemoveAnnotations extends RodWalker<Integer, Integer> implements Tr
         header = new VCFHeader(headerLines, (sitesOnly ? Collections.emptySet() : samples));
 
         allowableInfoKeys = new HashSet<>();
-        //NOTE: if lambdas are used here, the walker will not be picked up by PluginManager
-        // http://gatkforums.broadinstitute.org/gatk/discussion/comment/38892#Comment_38892
-        for (VCFInfoHeaderLine line : header.getInfoHeaderLines()){
-            allowableInfoKeys.add(line.getID());
-        }
+        header.getInfoHeaderLines().forEach(x -> allowableInfoKeys.add(x.getKey()));
 
         allowableFormatKeys = new HashSet<>();
-        for (VCFFormatHeaderLine line : header.getFormatHeaderLines()){
-            allowableFormatKeys.add(line.getID());
-        }
+        header.getFormatHeaderLines().forEach(x -> allowableFormatKeys.add(x.getKey()));
 
         vcfWriter.writeHeader(header);
     }
 
-    private int inspectAnnotation(Set<VCFHeaderLine> headerLines, VCFCompoundHeaderLine line, List<String> annotationToKeep, List<String> annotationsToExclude){
-        if (annotationToKeep != null && !annotationToKeep.contains(line.getID())){
+    private int inspectAnnotation(Set<VCFHeaderLine> headerLines, VCFHeaderLine line, List<String> annotationToKeep, List<String> annotationsToExclude){
+        if (annotationToKeep != null && !annotationToKeep.contains(line.getKey())){
             return 1;
         }
 
-        if (annotationsToExclude != null && annotationsToExclude.contains(line.getID())){
+        if (annotationsToExclude != null && annotationsToExclude.contains(line.getKey())){
             return 1;
         }
 
@@ -135,11 +129,8 @@ public class RemoveAnnotations extends RodWalker<Integer, Integer> implements Tr
 
     @Override
     public Integer map(RefMetaDataTracker tracker, ReferenceContext ref, AlignmentContext context) {
-        if (tracker == null)
-            return 0;
-
         Collection<VariantContext> vcs = tracker.getValues(variantCollection.variants, context.getLocation());
-        if (vcs == null || vcs.isEmpty())
+        if ( vcs.isEmpty() )
             return 0;
 
         for (VariantContext vc : vcs){
