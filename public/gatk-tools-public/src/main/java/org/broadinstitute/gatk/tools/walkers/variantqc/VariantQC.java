@@ -1,7 +1,5 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
-import com.google.gson.JsonObject;
-import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.broadinstitute.gatk.engine.arguments.DbsnpArgumentCollection;
 import org.broadinstitute.gatk.engine.arguments.StandardVariantContextInputArgumentCollection;
@@ -38,17 +36,17 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
     protected VariantEvalWrapper[] wrappers = new VariantEvalWrapper[]{
             //TODO: add MendelianViolationEvaluator, SiteFilterSummary?
-            new VariantEvalWrapper("Entire VCF", new String[]{"EvalRod"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new JsonTranslator.ReportDescriptor[]{
-                    JsonTranslator.TableReportDescriptor.getCountVariantsTable(),
-                    JsonTranslator.BarPlotReportDescriptor.getVariantTypeBarPlot(),
+            new VariantEvalWrapper("Entire VCF", new String[]{"EvalRod"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new ReportDescriptor[]{
+                    TableReportDescriptor.getCountVariantsTable(),
+                    BarPlotReportDescriptor.getVariantTypeBarPlot(),
             }),
-            new VariantEvalWrapper("By Contig", new String[]{"Contig"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new JsonTranslator.ReportDescriptor[]{
-                    JsonTranslator.TableReportDescriptor.getCountVariantsTable(),
-                    JsonTranslator.BarPlotReportDescriptor.getVariantTypeBarPlot()
+            new VariantEvalWrapper("By Contig", new String[]{"Contig"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new ReportDescriptor[]{
+                    TableReportDescriptor.getCountVariantsTable(),
+                    BarPlotReportDescriptor.getVariantTypeBarPlot()
             }),
-            new VariantEvalWrapper("By Sample", new String[]{"Sample"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new JsonTranslator.ReportDescriptor[]{
-                    JsonTranslator.TableReportDescriptor.getCountVariantsTable(),
-                    JsonTranslator.BarPlotReportDescriptor.getVariantTypeBarPlot()
+            new VariantEvalWrapper("By Sample", new String[]{"Sample"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new ReportDescriptor[]{
+                    TableReportDescriptor.getCountVariantsTable(),
+                    BarPlotReportDescriptor.getVariantTypeBarPlot()
             })
             //TODO: FilterType?
     };
@@ -136,26 +134,35 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         }
 
         //make classes like this to translate from the GATKReportTable into the config object we need in our HTML
-        List<JsonTranslator> translators = new ArrayList<>();
+        Map<String, SectionJsonDescriptor> translatorMap = new TreeMap<>();
 
         for (VariantEvalWrapper wrapper : this.wrappers) {
             try (BufferedReader sampleReader = new BufferedReader(new StringReader(new String(wrapper.out.toByteArray())))) {
                 sampleReader.readLine(); //read first GATKReport line
 
                 for (String evalModule : wrapper.evaluationModules){
-                    List<JsonTranslator.ReportDescriptor> rds = wrapper.getReportsForModule(evalModule);
+                    List<ReportDescriptor> rds = wrapper.getReportsForModule(evalModule);
                     GATKReportTable table = new GATKReportTable(sampleReader, GATKReportVersion.V1_1);
-                    translators.add(new JsonTranslator(wrapper.sectionLabel, table, wrapper.stratifications, rds));
+                    if (!translatorMap.containsKey(wrapper.sectionLabel)){
+                        translatorMap.put(wrapper.sectionLabel, new SectionJsonDescriptor(wrapper.sectionLabel, wrapper.stratifications));
+                    }
+
+                    for (ReportDescriptor rd : rds){
+                        translatorMap.get(wrapper.sectionLabel).addReportDescriptor(rd, table);
+                    }
+
 
                 }
             } catch (IOException e) {
                 throw new GATKException(e.getMessage(), e);
             }
         }
-        
+
         try {
+            List<SectionJsonDescriptor> sections = new ArrayList<>();
+            translatorMap.keySet().forEach(x -> sections.add(translatorMap.get(x)));
             HtmlGenerator generator = new HtmlGenerator();
-            generator.generateHtml(translators, out);
+            generator.generateHtml(sections, out);
         }
         catch (IOException e){
             throw new GATKException(e.getMessage(), e);
@@ -168,9 +175,9 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
         String[] stratifications;
         String[] evaluationModules;
         String sectionLabel;
-        JsonTranslator.ReportDescriptor[] reportDescriptors;
+        ReportDescriptor[] reportDescriptors;
 
-        public VariantEvalWrapper(String sectionLabel, String[] stratifications, String[] evaluationModules, JsonTranslator.ReportDescriptor[] reportDescriptors)
+        public VariantEvalWrapper(String sectionLabel, String[] stratifications, String[] evaluationModules, ReportDescriptor[] reportDescriptors)
         {
             this.stratifications = stratifications;
             this.evaluationModules = evaluationModules;
@@ -179,9 +186,9 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
             this.reportDescriptors = reportDescriptors;
         }
 
-        public List<JsonTranslator.ReportDescriptor> getReportsForModule(String evalModule){
-            List<JsonTranslator.ReportDescriptor> ret = new ArrayList<>();
-            for (JsonTranslator.ReportDescriptor rd : reportDescriptors){
+        public List<ReportDescriptor> getReportsForModule(String evalModule){
+            List<ReportDescriptor> ret = new ArrayList<>();
+            for (ReportDescriptor rd : reportDescriptors){
                 if (rd.evaluatorModuleName.equals(evalModule)){
                     ret.add(rd);
                 }

@@ -4,11 +4,9 @@ import com.google.gson.JsonArray;
 import org.apache.commons.io.IOUtils;
 import org.broadinstitute.gatk.utils.io.Resource;
 
-import javax.swing.text.html.HTML;
-import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
-import java.util.List;
+import java.util.Collection;
 
 /**
  * Created by bimber on 5/18/2017.
@@ -52,7 +50,7 @@ public class HtmlGenerator {
 
     }
 
-    public void generateHtml(List<JsonTranslator> translatorList, PrintStream out) throws IOException {
+    public void generateHtml(Collection<SectionJsonDescriptor> translatorList, PrintStream out) throws IOException {
 
         //append header
         Resource header = new Resource("templates/template1.html", VariantQC.class);
@@ -79,7 +77,7 @@ public class HtmlGenerator {
         out.println("sections:");
 
         JsonArray arr = new JsonArray();
-        for (JsonTranslator t : translatorList){
+        for (SectionJsonDescriptor t : translatorList){
             arr.add(t.getConfig());
         }
         out.println(arr.toString());
