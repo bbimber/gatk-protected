@@ -101,10 +101,16 @@ public class RemoveAnnotations extends RodWalker<Integer, Integer> implements Tr
         header = new VCFHeader(headerLines, (sitesOnly ? Collections.emptySet() : samples));
 
         allowableInfoKeys = new HashSet<>();
-        header.getInfoHeaderLines().forEach(x -> allowableInfoKeys.add(x.getKey()));
+        //NOTE: if lambdas are used here, the walker will not be picked up by PluginManager
+        // http://gatkforums.broadinstitute.org/gatk/discussion/comment/38892#Comment_38892
+        for (VCFHeaderLine line : header.getInfoHeaderLines()){
+            allowableInfoKeys.add(line.getKey());
+        }
 
         allowableFormatKeys = new HashSet<>();
-        header.getFormatHeaderLines().forEach(x -> allowableFormatKeys.add(x.getKey()));
+        for (VCFHeaderLine line : header.getFormatHeaderLines()){
+            allowableFormatKeys.add(line.getKey());
+        }
 
         vcfWriter.writeHeader(header);
     }
@@ -129,8 +135,11 @@ public class RemoveAnnotations extends RodWalker<Integer, Integer> implements Tr
 
     @Override
     public Integer map(RefMetaDataTracker tracker, ReferenceContext ref, AlignmentContext context) {
+        if (tracker == null)
+            return 0;
+
         Collection<VariantContext> vcs = tracker.getValues(variantCollection.variants, context.getLocation());
-        if ( vcs.isEmpty() )
+        if (vcs == null || vcs.isEmpty())
             return 0;
 
         for (VariantContext vc : vcs){
