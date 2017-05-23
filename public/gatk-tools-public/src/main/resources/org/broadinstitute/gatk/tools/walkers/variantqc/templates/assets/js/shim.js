@@ -24,7 +24,7 @@ function processPlots(config){
 
             //add to NavPanel
             navConfig[section.label].children.push({
-                id: r.plotDivId,
+                id: r.id,
                 label: r.label
             });
 
@@ -99,7 +99,7 @@ function buildReportDiv(parentDiv, config) {
 }
 
 function buildPlotDiv(parentDiv, config, plotType, buttonCfg){
-    var html =
+    var html = '<hr id="' + config.id + '">' +
         '<div class="mqc_hcplot_plotgroup">' +
             '<div class="btn-group hc_switch_group">' + buttonCfg + '</div>' +
             '<div class="hc-plot-wrapper">' +
@@ -111,8 +111,6 @@ function buildPlotDiv(parentDiv, config, plotType, buttonCfg){
 }
 
 function buildTableDiv(parentDiv, config){
-    config.id = uniqID.get('general_stats_table');
-
     var html = generateTableHtml(config);
     $(parentDiv).append($(html));
 }
