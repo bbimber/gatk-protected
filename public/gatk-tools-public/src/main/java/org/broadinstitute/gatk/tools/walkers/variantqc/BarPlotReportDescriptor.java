@@ -40,7 +40,6 @@ public class BarPlotReportDescriptor extends ReportDescriptor {
             int colIdx = getColumnByName(colName);
 
             JsonObject datasetJson = new JsonObject();
-            //datasetJson.addProperty("color", "");
             datasetJson.addProperty("name", colName);
 
             JsonArray data = new JsonArray();

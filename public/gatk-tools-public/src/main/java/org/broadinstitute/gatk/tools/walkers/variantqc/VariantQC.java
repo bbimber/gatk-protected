@@ -160,7 +160,13 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
 
         try {
             List<SectionJsonDescriptor> sections = new ArrayList<>();
-            translatorMap.keySet().forEach(x -> sections.add(translatorMap.get(x)));
+
+            //NOTE: if lambdas are used here, the walker will not be picked up by PluginManager
+            // http://gatkforums.broadinstitute.org/gatk/discussion/comment/38892#Comment_38892
+            for (String key : translatorMap.keySet()) {
+                sections.add(translatorMap.get(key));
+            }
+
             HtmlGenerator generator = new HtmlGenerator();
             generator.generateHtml(sections, out);
         }
