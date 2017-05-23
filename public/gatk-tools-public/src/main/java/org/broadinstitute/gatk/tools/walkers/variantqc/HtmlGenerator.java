@@ -6,7 +6,9 @@ import org.broadinstitute.gatk.utils.io.Resource;
 
 import java.io.IOException;
 import java.io.PrintStream;
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 
 /**
  * Created by bimber on 5/18/2017.
@@ -73,6 +75,8 @@ public class HtmlGenerator {
         out.println("mqc_plots = {};");
         out.println("num_datasets_plot_limit = 50;");
         out.println("$(function() {");
+        String dateStr = new SimpleDateFormat("yyyy-MM-dd HH:mm").format(new Date());
+        out.println("$('#dateTime').html('Generated on: " + dateStr + "');");
         out.println("processPlots({");
         out.println("sections:");
 
