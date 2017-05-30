@@ -5,5 +5,5 @@ git:
   depth: 9999999
 jdk:
   - openjdk8
-script
+script:
   - mvn clean verify
