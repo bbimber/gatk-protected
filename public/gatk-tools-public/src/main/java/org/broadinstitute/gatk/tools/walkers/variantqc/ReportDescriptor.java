@@ -76,7 +76,7 @@ abstract class ReportDescriptor {
             tokens.add(table.get(rowId, colName).toString());
         }
 
-        return StringUtil.join("/", tokens);
+        return StringUtil.join(" / ", tokens);
     }
 
     protected JsonArray getSampleNames(){

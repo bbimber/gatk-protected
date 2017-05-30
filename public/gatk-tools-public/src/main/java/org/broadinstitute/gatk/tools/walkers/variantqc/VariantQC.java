@@ -39,16 +39,38 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
             new VariantEvalWrapper("Entire VCF", new String[]{"EvalRod"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new ReportDescriptor[]{
                     TableReportDescriptor.getCountVariantsTable(),
                     BarPlotReportDescriptor.getVariantTypeBarPlot(),
+                    new TableReportDescriptor("Indel Summary", "IndelSummary"),
+                    new TableReportDescriptor("Ti/Tv Data", "TiTvVariantEvaluator"),
+                    new TableReportDescriptor("Genotype Summary", "GenotypeFilterSummary")
             }),
             new VariantEvalWrapper("By Contig", new String[]{"Contig"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new ReportDescriptor[]{
                     TableReportDescriptor.getCountVariantsTable(),
-                    BarPlotReportDescriptor.getVariantTypeBarPlot()
+                    BarPlotReportDescriptor.getVariantTypeBarPlot(),
+                    new TableReportDescriptor("Indel Summary", "IndelSummary"),
+                    new TableReportDescriptor("Ti/Tv Data", "TiTvVariantEvaluator"),
+                    new TableReportDescriptor("Genotype Summary", "GenotypeFilterSummary")
             }),
             new VariantEvalWrapper("By Sample", new String[]{"Sample"}, new String[]{"CountVariants", "IndelSummary", "TiTvVariantEvaluator", "GenotypeFilterSummary"}, new ReportDescriptor[]{
                     TableReportDescriptor.getCountVariantsTable(),
-                    BarPlotReportDescriptor.getVariantTypeBarPlot()
+                    BarPlotReportDescriptor.getVariantTypeBarPlot(),
+                    new TableReportDescriptor("Indel Summary", "IndelSummary"),
+                    new TableReportDescriptor("Ti/Tv Data", "TiTvVariantEvaluator"),
+                    new TableReportDescriptor("Genotype Summary", "GenotypeFilterSummary")
+            }),
+            new VariantEvalWrapper("By Filter Type", new String[]{"FilterType"}, new String[]{"CountVariants", "IndelSummary", "GenotypeFilterSummary"}, new ReportDescriptor[]{
+                    TableReportDescriptor.getCountVariantsTable(),
+                    BarPlotReportDescriptor.getVariantTypeBarPlot(),
+                    new TableReportDescriptor("Indel Summary", "IndelSummary"),
+                    new TableReportDescriptor("Ti/Tv Data", "TiTvVariantEvaluator"),
+                    new TableReportDescriptor("Genotype Summary", "GenotypeFilterSummary")
+            }),
+            new VariantEvalWrapper("By Sample/Filter Type", new String[]{"Sample", "FilterType"}, new String[]{"CountVariants", "IndelSummary", "GenotypeFilterSummary"}, new ReportDescriptor[]{
+                    TableReportDescriptor.getCountVariantsTable(),
+                    BarPlotReportDescriptor.getVariantTypeBarPlot(),
+                    new TableReportDescriptor("Indel Summary", "IndelSummary"),
+                    new TableReportDescriptor("Ti/Tv Data", "TiTvVariantEvaluator"),
+                    new TableReportDescriptor("Genotype Summary", "GenotypeFilterSummary")
             })
-            //TODO: FilterType?
     };
 
     @Override
@@ -141,8 +163,12 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
                 sampleReader.readLine(); //read first GATKReport line
 
                 for (String evalModule : wrapper.evaluationModules){
-                    List<ReportDescriptor> rds = wrapper.getReportsForModule(evalModule);
                     GATKReportTable table = new GATKReportTable(sampleReader, GATKReportVersion.V1_1);
+                    List<ReportDescriptor> rds = wrapper.getReportsForModule(table.getTableName());
+                    if (rds.isEmpty()){
+                        throw new GATKException("No report registered for GATK table: " + table.getTableName());
+                    }
+
                     if (!translatorMap.containsKey(wrapper.sectionLabel)){
                         translatorMap.put(wrapper.sectionLabel, new SectionJsonDescriptor(wrapper.sectionLabel, wrapper.stratifications));
                     }

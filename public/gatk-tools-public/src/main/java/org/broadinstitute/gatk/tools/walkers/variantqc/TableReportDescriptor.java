@@ -1,28 +1,38 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
 import com.google.gson.*;
+import com.sun.org.apache.xpath.internal.operations.Bool;
+import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.broadinstitute.gatk.utils.report.GATKReportColumn;
 import org.broadinstitute.gatk.utils.report.GATKReportDataType;
+
+import java.math.BigDecimal;
+import java.text.DecimalFormat;
+import java.text.NumberFormat;
 import java.util.*;
 
 /**
  * Created by bimber on 5/22/2017.
  */
 public class TableReportDescriptor extends ReportDescriptor {
-    Gson gson = new GsonBuilder().create();
+    private Gson gson = new GsonBuilder().create();
+    private Set<String> skippedColNames = new HashSet<>();
 
-    public TableReportDescriptor(String label, SectionJsonDescriptor.PlotType plotType, String evaluatorModuleName) {
-        super(label, plotType, evaluatorModuleName);
+    public TableReportDescriptor(String label, String evaluatorModuleName) {
+        super(label, SectionJsonDescriptor.PlotType.data_table, evaluatorModuleName);
+        skippedColNames.add(evaluatorModuleName);
+        skippedColNames.add("EvalRod");
+        skippedColNames.add("CompRod");
     }
 
     public static TableReportDescriptor getCountVariantsTable() {
-        TableReportDescriptor ret = new TableReportDescriptor("Variant Summary", SectionJsonDescriptor.PlotType.data_table, "CountVariants");
+        TableReportDescriptor ret = new TableReportDescriptor("Variant Summary", "CountVariants");
 
-        JsonObject myColJson = new JsonObject();
-        myColJson.addProperty("dmin", 0);
-        myColJson.addProperty("dmax", 1.0);
-        ret.addColumnInfo("myColumn", myColJson);
+        //JsonObject myColJson = new JsonObject();
+        //myColJson.addProperty("dmin", 0);
+        //myColJson.addProperty("dmax", 1.0);
+        //ret.addColumnInfo("myColumn", myColJson);
 
         return ret;
     }
@@ -41,66 +51,62 @@ public class TableReportDescriptor extends ReportDescriptor {
 
         JsonArray datasetsJson = new JsonArray();
         for (Object rowId : table.getRowIDs()) {
-            JsonArray rowJson = new JsonArray();
             List<Object> rowList = new ArrayList<>();
             for (GATKReportColumn col : table.getColumnInfo()) {
+                if (skippedColNames.contains(col.getColumnName())){
+                    continue;
+                }
+
                 rowList.add(table.get(rowId, col.getColumnName()));
-                rowJson = gson.toJsonTree(rowList).getAsJsonArray();
             }
-            datasetsJson.add(rowJson);
+
+            datasetsJson.add(gson.toJsonTree(rowList).getAsJsonArray());
         }
         dataObj.add("datasets", datasetsJson);
 
         dataObj.add("columns", new JsonArray());
         for (GATKReportColumn col : table.getColumnInfo()) {
+            if (skippedColNames.contains(col.getColumnName())){
+                continue;
+            }
+
             JsonObject colJson = new JsonObject();
             colJson.addProperty("name", col.getColumnName());
             colJson.addProperty("label", col.getColumnName());
 
-            Object dataType = col.getDataType();
-            if (dataType.toString().equals(GATKReportDataType.Decimal.toString())){
-                Set<Double> rowValuesSet = new HashSet<>();
-                for (Object rowId : table.getRowIDs()) {
-                    rowValuesSet.add(NumberUtils.createNumber(table.get(rowId, col.getColumnName()).toString()).doubleValue());
-                }
-                Double min = Collections.min(rowValuesSet) - Collections.min(rowValuesSet)*0.1;
-                Double max = Collections.max(rowValuesSet) + Collections.max(rowValuesSet)*0.1;
-                colJson.addProperty("dmin", min);
-                if (max == 0){
-                    colJson.addProperty("dmax", max+1);
-                } else {
-                    colJson.addProperty("dmax", max+(Collections.max(rowValuesSet)*0.1));
-                }
-            } else if (dataType.toString().equals(GATKReportDataType.Integer.toString())){
-                colJson.addProperty("formatString", "");
-                Set<Integer> rowValuesSet = new HashSet<>();
-                for (Object rowId : table.getRowIDs()) {
-                    rowValuesSet.add(NumberUtils.createNumber(table.get(rowId, col.getColumnName()).toString()).intValue());
-                }
-                Double min = Collections.min(rowValuesSet) - Collections.min(rowValuesSet)*0.1;
-                Double max = Collections.max(rowValuesSet) + Collections.max(rowValuesSet)*0.1;
-                colJson.addProperty("dmin", min);
-                if (max == 0){
-                    colJson.addProperty("dmax", max+1);
-                } else {
-                    colJson.addProperty("dmax", max);
-                }
-            } else {
-                colJson.addProperty("formatString", "");
-                colJson.addProperty("dmin", "");
-                colJson.addProperty("dmax", "");
+            if (col.getDataType() == GATKReportDataType.Decimal){
+                //TODO: look into format strings supporting more than 6 decimals
+                //colJson.addProperty("formatString", "0.00");
+
+                inferMinMax(colJson, col.getColumnName());
+
+            } else if (col.getDataType() == GATKReportDataType.Integer){
+                inferMinMax(colJson, col.getColumnName());
             }
 
-//            if (columnInfoMap.containsKey(col.getColumnName())){
-//                for (Map.Entry<String, JsonElement> e : columnInfoMap.get(col.getColumnName()).entrySet()){
-//                    colJson.add(e.getKey(), e.getValue());
-//                }
-//            }
+            //allow upstream code to supply custom config
+            if (columnInfoMap.containsKey(col.getColumnName())){
+                for (Map.Entry<String, JsonElement> e : columnInfoMap.get(col.getColumnName()).entrySet()){
+                    colJson.add(e.getKey(), e.getValue());
+                }
+            }
+
             dataObj.getAsJsonArray("columns").add(colJson);
         }
 
         return ret;
+
+    }
+
+    private void inferMinMax(JsonObject colJson, String colName){
+        List<Double> rowValuesList = new ArrayList<>();
+        for (Object rowId : table.getRowIDs()) {
+            rowValuesList.add(NumberUtils.createNumber(table.get(rowId, colName).toString()).doubleValue());
+        }
+
+        Double min = Collections.min(rowValuesList) - Collections.min(rowValuesList)*0.1;
+        Double max = Collections.max(rowValuesList) + Collections.max(rowValuesList)*0.1;
+        colJson.addProperty("dmin", min);
+        colJson.addProperty("dmax", max == 0 ? 1 : max);
     }
 }
-
-
