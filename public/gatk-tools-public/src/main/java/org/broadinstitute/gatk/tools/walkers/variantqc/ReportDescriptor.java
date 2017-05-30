@@ -28,8 +28,8 @@ abstract class ReportDescriptor {
         this.columnInfoMap = new HashMap<>();
     }
 
-    public void addColumnInfo(Map<String, JsonObject> columnInfoMap) {
-        this.columnInfoMap.putAll(columnInfoMap);
+    public void addColumnInfo(String colName, JsonObject columnInfo) {
+        this.columnInfoMap.put(colName, columnInfo);
     }
 
     public void bindSection(SectionJsonDescriptor sectionConfig, GATKReportTable table){
@@ -80,7 +80,7 @@ abstract class ReportDescriptor {
     }
 
     protected JsonArray getSampleNames(){
-        Set<String> sampleNames = new HashSet<>();
+        Set<String> sampleNames = new LinkedHashSet<>();
         for (Object rowId : table.getRowIDs()){
             String sn = getSampleNameForRow(rowId);
             if (sn != null){

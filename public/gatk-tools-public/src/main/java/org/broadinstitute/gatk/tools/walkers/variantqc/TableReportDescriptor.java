@@ -1,15 +1,9 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
 import com.google.gson.*;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import org.apache.commons.lang.BooleanUtils;
 import org.apache.commons.lang.math.NumberUtils;
 import org.broadinstitute.gatk.utils.report.GATKReportColumn;
 import org.broadinstitute.gatk.utils.report.GATKReportDataType;
-
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
 
 /**
@@ -65,27 +59,26 @@ public class TableReportDescriptor extends ReportDescriptor {
 
             Object dataType = col.getDataType();
             if (dataType.toString().equals(GATKReportDataType.Decimal.toString())){
-                colJson.addProperty("formatString", "0.00");
-                List<Double> rowValuesList = new ArrayList<>();
+                Set<Double> rowValuesSet = new HashSet<>();
                 for (Object rowId : table.getRowIDs()) {
-                    rowValuesList.add(NumberUtils.createNumber(table.get(rowId, col.getColumnName()).toString()).doubleValue());
+                    rowValuesSet.add(NumberUtils.createNumber(table.get(rowId, col.getColumnName()).toString()).doubleValue());
                 }
-                Double min = Collections.min(rowValuesList) - Collections.min(rowValuesList)*0.1;
-                Double max = Collections.max(rowValuesList) + Collections.max(rowValuesList)*0.1;
+                Double min = Collections.min(rowValuesSet) - Collections.min(rowValuesSet)*0.1;
+                Double max = Collections.max(rowValuesSet) + Collections.max(rowValuesSet)*0.1;
                 colJson.addProperty("dmin", min);
                 if (max == 0){
                     colJson.addProperty("dmax", max+1);
                 } else {
-                    colJson.addProperty("dmax", max);
+                    colJson.addProperty("dmax", max+(Collections.max(rowValuesSet)*0.1));
                 }
             } else if (dataType.toString().equals(GATKReportDataType.Integer.toString())){
                 colJson.addProperty("formatString", "");
-                List<Integer> rowValuesList = new ArrayList<>();
+                Set<Integer> rowValuesSet = new HashSet<>();
                 for (Object rowId : table.getRowIDs()) {
-                    rowValuesList.add(NumberUtils.createNumber(table.get(rowId, col.getColumnName()).toString()).intValue());
+                    rowValuesSet.add(NumberUtils.createNumber(table.get(rowId, col.getColumnName()).toString()).intValue());
                 }
-                Double min = Collections.min(rowValuesList) - Collections.min(rowValuesList)*0.1;
-                Double max = Collections.max(rowValuesList) + Collections.max(rowValuesList)*0.1;
+                Double min = Collections.min(rowValuesSet) - Collections.min(rowValuesSet)*0.1;
+                Double max = Collections.max(rowValuesSet) + Collections.max(rowValuesSet)*0.1;
                 colJson.addProperty("dmin", min);
                 if (max == 0){
                     colJson.addProperty("dmax", max+1);
@@ -107,6 +100,7 @@ public class TableReportDescriptor extends ReportDescriptor {
         }
 
         return ret;
-
     }
 }
+
+
