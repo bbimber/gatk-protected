@@ -76,11 +76,12 @@ public class TableReportDescriptor extends ReportDescriptor {
 
             if (col.getDataType() == GATKReportDataType.Decimal){
                 //TODO: look into format strings supporting more than 6 decimals
-                //colJson.addProperty("formatString", "0.00");
+                //colJson.addProperty("formatString", "0.0[0000]");
 
                 inferMinMax(colJson, col.getColumnName());
 
             } else if (col.getDataType() == GATKReportDataType.Integer){
+                colJson.addProperty("formatString", "0,0");
                 inferMinMax(colJson, col.getColumnName());
             }
 
