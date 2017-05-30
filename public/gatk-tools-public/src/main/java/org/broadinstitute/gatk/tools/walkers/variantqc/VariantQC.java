@@ -109,6 +109,9 @@ public class VariantQC extends RodWalker<Integer, Integer> implements TreeReduci
             Field noSTField = VariantEval.class.getDeclaredField("NO_STANDARD_STRATIFICATIONS");
             JVMUtils.setFieldValue(noSTField, wrapper.walker, true);
 
+            Field byFilterIsEnabledField = VariantEval.class.getDeclaredField("byFilterIsEnabled");
+            JVMUtils.setFieldValue(byFilterIsEnabledField, wrapper.walker, true);
+
             //TODO: set unbound?
             Field dbSnpField= VariantEval.class.getDeclaredField("dbsnp");
             dbSnpField.setAccessible(true);
