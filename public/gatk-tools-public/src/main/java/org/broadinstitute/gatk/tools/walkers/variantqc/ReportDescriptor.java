@@ -20,6 +20,8 @@ abstract class ReportDescriptor {
     protected Map<String, JsonObject> columnInfoMap;
     protected SectionJsonDescriptor sectionConfig;
     protected GATKReportTable table;
+    protected Set<String> skippedSamples = new HashSet<>();
+    protected Map<String, String> descriptionMap;
 
     protected ReportDescriptor(String label, SectionJsonDescriptor.PlotType plotType, String evaluatorModuleName) {
         this.label = label;
@@ -32,22 +34,10 @@ abstract class ReportDescriptor {
         this.columnInfoMap.put(colName, columnInfo);
     }
 
-    public void bindSection(SectionJsonDescriptor sectionConfig, GATKReportTable table){
+    public void bindSection(SectionJsonDescriptor sectionConfig, GATKReportTable table, Map<String, String> descriptionMap){
         this.sectionConfig = sectionConfig;
         this.table = table;
-    }
-
-    protected int getColumnByName(String name) {
-        int idx = 0;
-        for (GATKReportColumn col : table.getColumnInfo()) {
-            if (col.getColumnName().equals(name)) {
-                return idx;
-            }
-
-            idx++;
-        }
-
-        throw new GATKException("Unable to find column with name: " + name);
+        this.descriptionMap = descriptionMap;
     }
 
     abstract JsonObject getReportJson(String sectionTitle);
@@ -83,7 +73,7 @@ abstract class ReportDescriptor {
         Set<String> sampleNames = new LinkedHashSet<>();
         for (Object rowId : table.getRowIDs()){
             String sn = getSampleNameForRow(rowId);
-            if (sn != null){
+            if (sn != null && !skippedSamples.contains(sn)){
                 sampleNames.add(sn);
             }
         }
