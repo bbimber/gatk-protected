@@ -124,6 +124,7 @@ var uniqID = {
         var id =  prefix+""+uniqID.counter++;
         id = id.replace(/ /g, '_');
         id = id.replace(/\//g, '_');
+
         if($("#"+id).length == 0)
             return id;
         else

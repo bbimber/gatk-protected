@@ -9,6 +9,7 @@ import org.broadinstitute.gatk.utils.report.GATKReportTable;
 
 import java.util.*;
 
+
 /**
  * Created by bimber on 5/22/2017.
  */
@@ -63,6 +64,7 @@ public class BarPlotReportDescriptor extends ReportDescriptor {
         dataObj.getAsJsonArray("samples").add(getSampleNames());
 
         JsonArray datasetsJson = new JsonArray();
+
         for (String colName : getColumnsToPlot(table)) {
             JsonObject datasetJson = new JsonObject();
             datasetJson.addProperty("name", colName);
