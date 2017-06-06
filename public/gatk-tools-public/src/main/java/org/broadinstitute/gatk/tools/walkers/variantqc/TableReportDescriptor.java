@@ -10,6 +10,7 @@ import org.broadinstitute.gatk.utils.report.GATKReportColumn;
 import org.broadinstitute.gatk.utils.report.GATKReportDataType;
 import java.util.*;
 
+
 /**
  * Created by bimber on 5/22/2017.
  */
