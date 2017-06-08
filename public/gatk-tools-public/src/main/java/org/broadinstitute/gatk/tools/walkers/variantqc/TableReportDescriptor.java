@@ -115,7 +115,6 @@ public class TableReportDescriptor extends ReportDescriptor {
             dataObj.getAsJsonArray("columns").add(colJson);
         }
 
-        System.out.println("-----------------------------------\n");
         return ret;
 
     }
