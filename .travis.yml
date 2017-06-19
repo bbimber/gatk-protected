@@ -5,6 +5,8 @@ git:
   depth: 9999999
 jdk:
   - openjdk8
+install:
+  - mvn install -DskipTests=true -Dmaven.javadoc.skip=true -B -V -P\!queue
 script:
   - export JARNAME="VariantQC"
   - mvn -Dgatk.binary-dist.name=$JARNAME clean verify -P\!queue
