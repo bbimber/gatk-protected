@@ -6,4 +6,18 @@ git:
 jdk:
   - openjdk8
 script:
-  - mvn clean verify
+  - export JARNAME="VariantQC"
+  - mvn -Dgatk.binary-dist.name=$JARNAME clean verify
+
+before_deploy:
+  - echo "TRAVIS_TAG: ["${TRAVIS_TAG}"]"
+  - mv target/VariantQC.jar target/VariantQC-${TRAVIS_TAG}.jar
+
+deploy:
+  provider: releases
+  api_key: "${GH_TOKEN}"
+  file:
+    - target/VariantQC-${TRAVIS_TAG}.jar
+  skip_cleanup: true
+  on:
+    tags: true
