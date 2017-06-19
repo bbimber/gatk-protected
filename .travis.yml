@@ -7,7 +7,7 @@ jdk:
   - openjdk8
 script:
   - export JARNAME="VariantQC"
-  - mvn -Dgatk.binary-dist.name=$JARNAME clean verify
+  - mvn -Dgatk.binary-dist.name=$JARNAME clean verify -P\!queue
 
 before_deploy:
   - echo ${TRAVIS_TAG}
