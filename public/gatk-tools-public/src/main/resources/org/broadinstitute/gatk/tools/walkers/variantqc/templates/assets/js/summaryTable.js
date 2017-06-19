@@ -51,7 +51,13 @@ function generateTableHtml(config){
                 if (column.dmax){
                     percentage = ((parseFloat(val) - (column.dmin || 0)) / (column.dmax - (column.dmin || 0))) * 100;
                 }
-                html += '<td ' + (showBar ? 'class="data-coloured ' + column.colId + '_' + column.name + ' "' : '') + '><div class="wrapper">' + (showBar ? '<span class="bar" style="width:' + percentage + '%;"></span>' : '') + '<span class="val">' + formattedVal + '</span></div></td>';
+
+                if (val < column.flagBelow || val > column.flagAbove){
+                    html += '<td ' + (showBar ? 'class="data-coloured-flagged ' + column.colId + '_' + column.name + ' "' : '') + '><div class="wrapper">' + (showBar ? '<span class="bar" style="width:' + percentage + '%;"></span>' : '') + '<span class="val">' + formattedVal + '</span></div></td>';
+                } else {
+                    html += '<td ' + (showBar ? 'class="data-coloured ' + column.colId + '_' + column.name + ' "' : '') + '><div class="wrapper">' + (showBar ? '<span class="bar" style="width:' + percentage + '%;"></span>' : '') + '<span class="val">' + formattedVal + '</span></div></td>';
+                }
+
             }
             else {
                 html += '<td>ND</td>';

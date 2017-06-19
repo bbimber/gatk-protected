@@ -1,22 +1,20 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
-import com.google.gson.*;
-import com.sun.org.apache.xpath.internal.operations.Bool;
-import org.apache.commons.lang.BooleanUtils;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import org.apache.commons.lang.math.NumberUtils;
+import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
 import org.broadinstitute.gatk.utils.report.GATKReportColumn;
 import org.broadinstitute.gatk.utils.report.GATKReportDataType;
-
-import java.math.BigDecimal;
-import java.text.DecimalFormat;
-import java.text.NumberFormat;
 import java.util.*;
+
 
 /**
  * Created by bimber on 5/22/2017.
  */
 public class TableReportDescriptor extends ReportDescriptor {
-    private Gson gson = new GsonBuilder().create();
     private Set<String> skippedColNames = new HashSet<>();
 
     public TableReportDescriptor(String label, String evaluatorModuleName, Collection<String> skippedSamples) {
@@ -24,7 +22,7 @@ public class TableReportDescriptor extends ReportDescriptor {
         skippedColNames.add(evaluatorModuleName);
         skippedColNames.add("EvalRod");
         skippedColNames.add("CompRod");
-        if (skippedSamples != null){
+        if (skippedSamples != null) {
             this.skippedSamples.addAll(skippedSamples);
         }
     }
@@ -73,20 +71,20 @@ public class TableReportDescriptor extends ReportDescriptor {
             }
 
             for (GATKReportColumn col : table.getColumnInfo()) {
-                if (skippedColNames.contains(col.getColumnName())){
+                if (skippedColNames.contains(col.getColumnName())) {
                     continue;
                 }
 
                 rowList.add(table.get(rowId, col.getColumnName()));
             }
 
-            datasetsJson.add(gson.toJsonTree(rowList).getAsJsonArray());
+            datasetsJson.add(new GsonBuilder().create().toJsonTree(rowList).getAsJsonArray());
         }
         dataObj.add("datasets", datasetsJson);
 
         dataObj.add("columns", new JsonArray());
         for (GATKReportColumn col : table.getColumnInfo()) {
-            if (skippedColNames.contains(col.getColumnName())){
+            if (skippedColNames.contains(col.getColumnName())) {
                 continue;
             }
 
@@ -94,20 +92,22 @@ public class TableReportDescriptor extends ReportDescriptor {
             colJson.addProperty("name", col.getColumnName());
             colJson.addProperty("label", descriptionMap.containsKey(col.getColumnName()) ? descriptionMap.get(col.getColumnName()) : col.getColumnName());
 
-            if (col.getDataType() == GATKReportDataType.Decimal){
+            if (col.getDataType() == GATKReportDataType.Decimal) {
                 //TODO: look into format strings supporting more than 6 decimals
                 //colJson.addProperty("formatString", "0.0[0000]");
 
+                flagValueByTwoStandardDeviation(colJson, col.getColumnName());
                 inferMinMax(colJson, col.getColumnName());
 
-            } else if (col.getDataType() == GATKReportDataType.Integer){
+            } else if (col.getDataType() == GATKReportDataType.Integer) {
                 colJson.addProperty("formatString", "0,0");
+                flagValueByTwoStandardDeviation(colJson, col.getColumnName());
                 inferMinMax(colJson, col.getColumnName());
             }
 
             //allow upstream code to supply custom config
-            if (columnInfoMap.containsKey(col.getColumnName())){
-                for (Map.Entry<String, JsonElement> e : columnInfoMap.get(col.getColumnName()).entrySet()){
+            if (columnInfoMap.containsKey(col.getColumnName())) {
+                for (Map.Entry<String, JsonElement> e : columnInfoMap.get(col.getColumnName()).entrySet()) {
                     colJson.add(e.getKey(), e.getValue());
                 }
             }
@@ -119,7 +119,7 @@ public class TableReportDescriptor extends ReportDescriptor {
 
     }
 
-    private void inferMinMax(JsonObject colJson, String colName){
+    private void inferMinMax(JsonObject colJson, String colName) {
         List<Double> rowValuesList = new ArrayList<>();
         for (Object rowId : table.getRowIDs()) {
             if (skippedSamples.contains(getSampleNameForRow(rowId))) {
@@ -129,9 +129,27 @@ public class TableReportDescriptor extends ReportDescriptor {
             rowValuesList.add(NumberUtils.createNumber(table.get(rowId, colName).toString()).doubleValue());
         }
 
-        Double min = Collections.min(rowValuesList) - Collections.min(rowValuesList)*0.1;
-        Double max = Collections.max(rowValuesList) + Collections.max(rowValuesList)*0.1;
+        Double min = Collections.min(rowValuesList) - Collections.min(rowValuesList) * 0.1;
+        Double max = Collections.max(rowValuesList) + Collections.max(rowValuesList) * 0.1;
         colJson.addProperty("dmin", min);
         colJson.addProperty("dmax", max == 0 ? 1 : max);
+    }
+
+    private void flagValueByTwoStandardDeviation(JsonObject colJson, String colName){
+        DescriptiveStatistics stats = new DescriptiveStatistics();
+        for (Object rowId : table.getRowIDs()){
+            if (skippedSamples.contains(getSampleNameForRow(rowId))) {
+                continue;
+            }
+
+            stats.addValue(NumberUtils.createBigDecimal(table.get(rowId, colName).toString()).doubleValue());
+        }
+
+        Double sd = stats.getStandardDeviation();
+        Double mean = stats.getMean();
+        Double aboveTwoSd = mean + (2.0 * sd);
+        Double belowTwoSd = mean - (2.0 * sd);
+        colJson.addProperty("flagAbove", aboveTwoSd);
+        colJson.addProperty("flagBelow", belowTwoSd);
     }
 }
