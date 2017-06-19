@@ -10,7 +10,7 @@ script:
   - mvn -Dgatk.binary-dist.name=$JARNAME clean verify
 
 before_deploy:
-  - echo "TRAVIS_TAG: ["${TRAVIS_TAG}"]"
+  - echo ${TRAVIS_TAG}
   - mv target/VariantQC.jar target/VariantQC-${TRAVIS_TAG}.jar
 
 deploy:
