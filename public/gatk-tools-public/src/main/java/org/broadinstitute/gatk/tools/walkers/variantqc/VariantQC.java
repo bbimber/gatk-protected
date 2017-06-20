@@ -1,7 +1,5 @@
 package org.broadinstitute.gatk.tools.walkers.variantqc;
 
-import com.google.gson.JsonObject;
-import htsjdk.samtools.util.StringUtil;
 import htsjdk.variant.variantcontext.VariantContext;
 import org.broadinstitute.gatk.engine.arguments.DbsnpArgumentCollection;
 import org.broadinstitute.gatk.engine.arguments.StandardVariantContextInputArgumentCollection;
